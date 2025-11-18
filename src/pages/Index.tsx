@@ -47,6 +47,7 @@ export default function Index() {
   const [isCreateDiaryOpen, setIsCreateDiaryOpen] = useState(false);
   const [isCreateEntryOpen, setIsCreateEntryOpen] = useState(false);
   const [diaryToDelete, setDiaryToDelete] = useState<string | null>(null);
+  const [entryToDelete, setEntryToDelete] = useState<string | null>(null);
   const [newDiary, setNewDiary] = useState({ title: '', theme: '', color: 'gradient-lavender' });
   const [newEntry, setNewEntry] = useState({ content: '', mood: '🙂', diaryId: '' });
 
@@ -128,6 +129,12 @@ export default function Index() {
     setDiaries(diaries.filter(d => d.id !== diaryId));
     setDiaryToDelete(null);
     toast.success(`Дневник "${diary.title}" удалён`);
+  };
+
+  const handleDeleteEntry = (entryId: string) => {
+    setEntries(entries.filter(e => e.id !== entryId));
+    setEntryToDelete(null);
+    toast.success('Запись удалена');
   };
 
   const handleCreateEntry = () => {
@@ -267,6 +274,14 @@ export default function Index() {
                         {entry.date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}
                       </span>
                     </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                      onClick={() => setEntryToDelete(entry.id)}
+                    >
+                      <Icon name="Trash2" size={14} />
+                    </Button>
                   </div>
                   <p className="text-sm font-diary leading-relaxed whitespace-pre-wrap">{entry.content}</p>
                   <div className="mt-3 flex gap-2">
@@ -279,6 +294,26 @@ export default function Index() {
               ))}
             </div>
           )}
+
+          <AlertDialog open={!!entryToDelete} onOpenChange={() => setEntryToDelete(null)}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Удалить запись?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Это действие нельзя отменить.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Отмена</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={() => entryToDelete && handleDeleteEntry(entryToDelete)}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
+                  Удалить
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </div>
     );
