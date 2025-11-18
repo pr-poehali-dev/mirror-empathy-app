@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DialogFooter } from '@/components/ui/dialog';
@@ -40,33 +40,63 @@ const DIARY_COLORS = [
 
 export default function Index() {
   const [activeTab, setActiveTab] = useState('diaries');
-  const [diaries, setDiaries] = useState<Diary[]>([
-    {
-      id: '1',
-      title: 'Личный дневник',
-      color: 'gradient-lavender',
-      theme: 'семья, отношения',
-      createdAt: new Date(),
-      entriesCount: 5,
-    },
-  ]);
-  const [entries, setEntries] = useState<Entry[]>([
-    {
-      id: '1',
-      diaryId: '1',
-      content: 'Сегодня был тёплый осенний день. Гуляла в парке и думала о том, как важно ценить простые моменты.',
-      mood: '🙂',
-      date: new Date(),
-      diaryColor: 'gradient-lavender',
-      diaryTitle: 'Личный дневник',
-    },
-  ]);
+  const [selectedDiaryId, setSelectedDiaryId] = useState<string | null>(null);
+  const [diaries, setDiaries] = useState<Diary[]>([]);
+  const [entries, setEntries] = useState<Entry[]>([]);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [isCreateDiaryOpen, setIsCreateDiaryOpen] = useState(false);
   const [isCreateEntryOpen, setIsCreateEntryOpen] = useState(false);
   const [diaryToDelete, setDiaryToDelete] = useState<string | null>(null);
   const [newDiary, setNewDiary] = useState({ title: '', theme: '', color: 'gradient-lavender' });
   const [newEntry, setNewEntry] = useState({ content: '', mood: '🙂', diaryId: '' });
+
+  useEffect(() => {
+    const savedDiaries = localStorage.getItem('mirror-diaries');
+    const savedEntries = localStorage.getItem('mirror-entries');
+    
+    if (savedDiaries) {
+      const parsed = JSON.parse(savedDiaries);
+      setDiaries(parsed.map((d: Diary) => ({ ...d, createdAt: new Date(d.createdAt) })));
+    } else {
+      const defaultDiary = {
+        id: '1',
+        title: 'Личный дневник',
+        color: 'gradient-lavender',
+        theme: 'семья, отношения',
+        createdAt: new Date(),
+        entriesCount: 1,
+      };
+      setDiaries([defaultDiary]);
+    }
+    
+    if (savedEntries) {
+      const parsed = JSON.parse(savedEntries);
+      setEntries(parsed.map((e: Entry) => ({ ...e, date: new Date(e.date) })));
+    } else {
+      const defaultEntry = {
+        id: '1',
+        diaryId: '1',
+        content: 'Сегодня был тёплый осенний день. Гуляла в парке и думала о том, как важно ценить простые моменты.',
+        mood: '🙂',
+        date: new Date(),
+        diaryColor: 'gradient-lavender',
+        diaryTitle: 'Личный дневник',
+      };
+      setEntries([defaultEntry]);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (diaries.length > 0) {
+      localStorage.setItem('mirror-diaries', JSON.stringify(diaries));
+    }
+  }, [diaries]);
+
+  useEffect(() => {
+    if (entries.length > 0) {
+      localStorage.setItem('mirror-entries', JSON.stringify(entries));
+    }
+  }, [entries]);
 
   const handleCreateDiary = () => {
     if (!newDiary.title.trim()) {
@@ -87,6 +117,7 @@ export default function Index() {
     setNewDiary({ title: '', theme: '', color: 'gradient-lavender' });
     setIsCreateDiaryOpen(false);
     toast.success('Дневник создан!');
+    setSelectedDiaryId(diary.id);
   };
 
   const handleDeleteDiary = (diaryId: string) => {
@@ -134,6 +165,124 @@ export default function Index() {
   const todayEntries = entries.filter(
     entry => entry.date.toDateString() === selectedDate.toDateString()
   );
+
+  const selectedDiary = selectedDiaryId ? diaries.find(d => d.id === selectedDiaryId) : null;
+  const diaryEntries = selectedDiaryId 
+    ? entries.filter(e => e.diaryId === selectedDiaryId).sort((a, b) => b.date.getTime() - a.date.getTime())
+    : [];
+
+  if (selectedDiary) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50">
+        <div className="max-w-md mx-auto px-4 py-6 animate-fade-in">
+          <div className="mb-6 flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setSelectedDiaryId(null)}
+              className="h-10 w-10"
+            >
+              <Icon name="ArrowLeft" size={20} />
+            </Button>
+            <div className="flex-1">
+              <h1 className="text-2xl font-bold text-primary">{selectedDiary.title}</h1>
+              <p className="text-sm text-muted-foreground">{selectedDiary.theme}</p>
+            </div>
+          </div>
+
+          <div className={`p-4 rounded-2xl mb-6 ${selectedDiary.color}`}>
+            <div className="flex items-center justify-between text-sm">
+              <span className="font-medium">Всего записей</span>
+              <span className="text-2xl font-bold">{diaryEntries.length}</span>
+            </div>
+          </div>
+
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-semibold">Все записи</h2>
+            <Dialog open={isCreateEntryOpen} onOpenChange={setIsCreateEntryOpen}>
+              <DialogTrigger asChild>
+                <Button size="sm" className="gap-2" onClick={() => setNewEntry({ ...newEntry, diaryId: selectedDiaryId })}>
+                  <Icon name="Plus" size={16} />
+                  Записать
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="animate-scale-in">
+                <DialogHeader>
+                  <DialogTitle>Новая запись</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <Label>Настроение</Label>
+                    <div className="flex gap-2">
+                      {MOODS.map((mood) => (
+                        <button
+                          key={mood}
+                          onClick={() => setNewEntry({ ...newEntry, mood })}
+                          className={`text-3xl p-2 rounded-lg transition-all ${
+                            newEntry.mood === mood ? 'bg-primary/10 scale-110' : 'hover:bg-muted'
+                          }`}
+                        >
+                          {mood}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="content">Запись</Label>
+                    <Textarea
+                      id="content"
+                      placeholder="Расскажите, как прошёл день..."
+                      rows={6}
+                      className="font-diary resize-none"
+                      value={newEntry.content}
+                      onChange={(e) => setNewEntry({ ...newEntry, content: e.target.value })}
+                    />
+                  </div>
+                </div>
+                <Button onClick={handleCreateEntry} className="w-full">
+                  Сохранить запись
+                </Button>
+              </DialogContent>
+            </Dialog>
+          </div>
+
+          {diaryEntries.length === 0 ? (
+            <Card className="p-8 text-center">
+              <div className="flex flex-col items-center gap-4 text-muted-foreground">
+                <Icon name="BookOpen" size={48} className="opacity-30" />
+                <p>Пока нет записей в этом дневнике</p>
+              </div>
+            </Card>
+          ) : (
+            <div className="space-y-3">
+              {diaryEntries.map((entry) => (
+                <Card
+                  key={entry.id}
+                  className={`p-4 animate-fade-in border-l-4 ${entry.diaryColor}`}
+                >
+                  <div className="flex items-start gap-3 mb-2">
+                    <span className="text-2xl">{entry.mood}</span>
+                    <div className="flex-1">
+                      <span className="text-xs font-medium text-muted-foreground">
+                        {entry.date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}
+                      </span>
+                    </div>
+                  </div>
+                  <p className="text-sm font-diary leading-relaxed whitespace-pre-wrap">{entry.content}</p>
+                  <div className="mt-3 flex gap-2">
+                    <Button variant="ghost" size="sm" className="text-xs gap-1">
+                      <Icon name="Sparkles" size={14} />
+                      Попросить комментарий AI
+                    </Button>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50">
@@ -219,24 +368,37 @@ export default function Index() {
                   className={`p-4 hover:shadow-lg transition-all animate-fade-in border-none ${diary.color}`}
                 >
                   <div className="flex items-start justify-between">
-                    <div className="flex-1">
+                    <div className="flex-1 cursor-pointer" onClick={() => setSelectedDiaryId(diary.id)}>
                       <h3 className="font-semibold text-lg mb-1">{diary.title}</h3>
                       <p className="text-sm text-muted-foreground mb-2">{diary.theme}</p>
                       <div className="flex items-center gap-4 text-xs text-muted-foreground">
                         <span className="flex items-center gap-1">
                           <Icon name="FileText" size={12} />
-                          {diary.entriesCount} записей
+                          {entries.filter(e => e.diaryId === diary.id).length} записей
                         </span>
                       </div>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                      onClick={() => setDiaryToDelete(diary.id)}
-                    >
-                      <Icon name="Trash2" size={16} />
-                    </Button>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-muted-foreground"
+                        onClick={() => setSelectedDiaryId(diary.id)}
+                      >
+                        <Icon name="ChevronRight" size={16} />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setDiaryToDelete(diary.id);
+                        }}
+                      >
+                        <Icon name="Trash2" size={16} />
+                      </Button>
+                    </div>
                   </div>
                 </Card>
               ))}
