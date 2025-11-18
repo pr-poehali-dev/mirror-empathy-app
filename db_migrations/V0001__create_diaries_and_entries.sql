@@ -1,0 +1,22 @@
+CREATE TABLE IF NOT EXISTS diaries (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    title VARCHAR(255) NOT NULL,
+    color VARCHAR(50) NOT NULL DEFAULT 'gradient-lavender',
+    theme TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS entries (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    diary_id UUID NOT NULL REFERENCES diaries(id),
+    content TEXT NOT NULL,
+    mood VARCHAR(10) NOT NULL DEFAULT '🙂',
+    date TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_entries_diary_id ON entries(diary_id);
+CREATE INDEX IF NOT EXISTS idx_entries_date ON entries(date);
+CREATE INDEX IF NOT EXISTS idx_diaries_created_at ON diaries(created_at);
