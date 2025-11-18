@@ -1,38 +1,45 @@
+@import url("https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600&family=Merriweather:wght@300;400;700&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --background: 280 100% 98%;
+    --foreground: 280 10% 20%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 280 10% 20%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 280 10% 20%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 258 90% 66%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 280 100% 95%;
+    --secondary-foreground: 280 10% 20%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 280 40% 96%;
+    --muted-foreground: 280 10% 50%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 330 100% 94%;
+    --accent-foreground: 280 10% 20%;
 
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 280 30% 92%;
+    --input: 280 30% 92%;
+    --ring: 258 90% 66%;
 
-    --radius: 0.5rem;
+    --radius: 1rem;
+
+    --diary-lavender: 280 100% 94%;
+    --diary-peach: 330 100% 94%;
+    --diary-sky: 210 100% 94%;
+    --diary-mint: 160 100% 94%;
 
     --sidebar-background: 0 0% 98%;
 
@@ -97,5 +104,26 @@
 
   body {
     @apply bg-background text-foreground;
+    font-family: "Rubik", sans-serif;
+  }
+
+  .font-diary {
+    font-family: "Merriweather", serif;
+  }
+
+  .gradient-lavender {
+    background: linear-gradient(135deg, #e5deff 0%, #d6bcfa 100%);
+  }
+
+  .gradient-peach {
+    background: linear-gradient(135deg, #ffdee2 0%, #fec6a1 100%);
+  }
+
+  .gradient-sky {
+    background: linear-gradient(135deg, #d3e4fd 0%, #a8d5f2 100%);
+  }
+
+  .gradient-mint {
+    background: linear-gradient(135deg, #f2fce2 0%, #c8f0d0 100%);
   }
 }
