@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -63,6 +64,7 @@ export default function Index() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [isCreateDiaryOpen, setIsCreateDiaryOpen] = useState(false);
   const [isCreateEntryOpen, setIsCreateEntryOpen] = useState(false);
+  const [diaryToDelete, setDiaryToDelete] = useState<string | null>(null);
   const [newDiary, setNewDiary] = useState({ title: '', theme: '', color: 'gradient-lavender' });
   const [newEntry, setNewEntry] = useState({ content: '', mood: '🙂', diaryId: '' });
 
@@ -85,6 +87,16 @@ export default function Index() {
     setNewDiary({ title: '', theme: '', color: 'gradient-lavender' });
     setIsCreateDiaryOpen(false);
     toast.success('Дневник создан!');
+  };
+
+  const handleDeleteDiary = (diaryId: string) => {
+    const diary = diaries.find(d => d.id === diaryId);
+    if (!diary) return;
+
+    setEntries(entries.filter(e => e.diaryId !== diaryId));
+    setDiaries(diaries.filter(d => d.id !== diaryId));
+    setDiaryToDelete(null);
+    toast.success(`Дневник "${diary.title}" удалён`);
   };
 
   const handleCreateEntry = () => {
@@ -204,7 +216,7 @@ export default function Index() {
               {diaries.map((diary) => (
                 <Card
                   key={diary.id}
-                  className={`p-4 cursor-pointer hover:shadow-lg transition-all animate-fade-in border-none ${diary.color}`}
+                  className={`p-4 hover:shadow-lg transition-all animate-fade-in border-none ${diary.color}`}
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
@@ -217,11 +229,38 @@ export default function Index() {
                         </span>
                       </div>
                     </div>
-                    <Icon name="ChevronRight" size={20} className="text-muted-foreground" />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                      onClick={() => setDiaryToDelete(diary.id)}
+                    >
+                      <Icon name="Trash2" size={16} />
+                    </Button>
                   </div>
                 </Card>
               ))}
             </div>
+
+            <AlertDialog open={!!diaryToDelete} onOpenChange={() => setDiaryToDelete(null)}>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Удалить дневник?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Все записи из этого дневника будут удалены. Это действие нельзя отменить.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Отмена</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() => diaryToDelete && handleDeleteDiary(diaryToDelete)}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    Удалить
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </TabsContent>
 
           <TabsContent value="day" className="space-y-4">
